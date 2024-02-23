@@ -15,7 +15,7 @@ use url_builder::URLBuilder;
 #[cfg(feature = "web")]
 static PROTOCOL: &str = "https";
 #[cfg(feature = "web")]
-static IP: &str = "sarda.dev";
+static IP: &str = "backend.sarda.dev";
 #[cfg(feature = "web")]
 static PORT: u16 = 443;
 
