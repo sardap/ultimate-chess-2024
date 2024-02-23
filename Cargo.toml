@@ -1,0 +1,67 @@
+[package]
+name = "uc2024"
+version = "0.1.0"
+edition = "2021"
+
+# Enable max optimizations for dependencies, but not for our code:
+[profile.dev.package."*"]
+opt-level = 3
+
+[features]
+default = []
+web = []
+
+[dependencies]
+async-std = { version = "1.12.0", features = ["unstable"] }
+base64 = "0.21.7"
+bevy = "0.12.1"
+bevy-async-task = "1.3.1"
+bevy_ascii_terminal = "0.14.0"
+bevy_common_assets = { features = [
+    "csv",
+    "json",
+], git = "https://github.com/NiklasEi/bevy_common_assets", rev = "18c17fb2f036d9a5ec99b0046ffe94a30ca490c7" }
+bevy_mod_reqwest = "0.12.0"
+bevy_prng = { version = "0.2.0", features = ["rand_chacha"] }
+bevy_rand = { version = "0.4.0", features = ["rand_chacha"] }
+chess = { git = "https://github.com/sardap/chess", features = ["serialize"] }
+crossbeam-channel = "0.5.11"
+csv = "1.3.0"
+futures-lite = "1.13.0"
+lazy_static = "1.4.0"
+rand = "0.8.5"
+regex = "1.10.3"
+serde = { version = "1.0.195", features = ["derive"] }
+serde_json = "1.0.111"
+strsim = "0.11.0"
+strum = { version = "0.25.0", features = ["derive", "strum_macros"] }
+ternary-tree = "0.1.1"
+url-builder = "0.1.1"
+uuid = { version = "1.6.1", features = ["v4"] }
+weighted_rand = "0.4.2"
+serde_repr = "0.1.18"
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+num_cpus = "1.16.0"
+async-semaphore = "1.2.0"
+
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+serde-wasm-bindgen = "0.6.3"
+wasm-mt = "0.1.3"
+serde_closure = "0.3"
+web-sys = { version = "0.3", features = ["console"] }
+bincode = "1.3.3"
+base64 = "0.21.7"
+once_cell = "1.19.0"
+js-sys = "0.3.68"
+
+[[bin]]
+name = "uc2024_bin"
+path = "src/main.rs"
+
+
+[lib]
+crate-type = ["cdylib", "rlib"]

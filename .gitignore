@@ -1,0 +1,6 @@
+/target
+sounds.wav
+tools/pgn-parser/input
+tools/pgn-parser/player_profiles.computer.json
+*.exe
+out/

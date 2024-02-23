@@ -1,0 +1,57 @@
+[
+
+    {
+        "name": "Mango",
+        "file": "./input/mango.json",
+        "piece_values": {
+            "pawn": 1,
+            "knight": 3.3,
+            "bishop": 3,
+            "rook": 5.5,
+            "queen": 9
+        },
+        "depth": {
+            "move_hit": [0.9, 0.85, 0.9, 0.9, 0.9, 0.9],
+            "levels": [0, 0, 5, 10, 70, 10, 5],
+            "thinking_time": [10.0, 60.0]
+        },
+        "check_bonus": 0.8,
+        "decision_algorithm": "alpha_beta"
+    },
+    {
+        "name": "Not Idiot",
+        "file": "./input/not_idiot.json",
+        "piece_values": {
+            "pawn": 1,
+            "knight": 3,
+            "bishop": 3,
+            "rook": 5,
+            "queen": 9
+        },
+        "depth": {
+            "move_hit": [1.0, 1.0, 1.0, 1.0, 1.0, 1.0],
+            "levels": [0, 0, 0, 0, 0, 0, 0, 0, 100],
+            "thinking_time": [10.0, 30.0]
+        },
+        "check_bonus": 0.0,
+        "decision_algorithm": "alpha_beta"
+    },
+    {
+        "name": "Paul",
+        "file": "./input/paul.json",
+        "piece_values": {
+            "pawn": 1,
+            "knight": 3,
+            "bishop": 4,
+            "rook": 5,
+            "queen": 9
+        },
+        "depth": {
+            "move_hit": [0.7, 0.45, 0.7, 0.7, 0.5, 0.95],
+            "levels": [95, 5],
+            "thinking_time": [0.5, 3.0]
+        },
+        "check_bonus": 0.5,
+        "decision_algorithm": "nega_max"
+    }
+]

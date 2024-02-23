@@ -1,0 +1,28 @@
+{
+    "editor.formatOnSave": true,
+    "cSpell.words": [
+        "bitboard",
+        "Blundy",
+        "Bogo",
+        "Deque",
+        "despawn",
+        "highlitable",
+        "Horsies",
+        "inbetween",
+        "itereaideve",
+        "Kawns",
+        "Lowerbound",
+        "nega",
+        "Netcode",
+        "popcnt",
+        "prng",
+        "queenside",
+        "Renet",
+        "Reqwest",
+        "rngs",
+        "Sarda",
+        "Seedable",
+        "uchess"
+    ],
+    // "rust-analyzer.cargo.target": "wasm32-unknown-unknown",
+}
