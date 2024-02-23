@@ -2,6 +2,7 @@
 name = "uc2024"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 
 # Enable max optimizations for dependencies, but not for our code:
 [profile.dev.package."*"]
@@ -10,6 +11,10 @@ opt-level = 3
 [features]
 default = []
 web = []
+
+[build-dependencies]
+embed-resource = "2.4.1"
+
 
 [dependencies]
 async-std = { version = "1.12.0", features = ["unstable"] }
@@ -44,7 +49,8 @@ serde_repr = "0.1.18"
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 num_cpus = "1.16.0"
 async-semaphore = "1.2.0"
-
+winit = "0.28"
+image = "*"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 wasm-bindgen = "0.2"
