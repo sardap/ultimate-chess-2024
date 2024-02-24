@@ -2,7 +2,7 @@ use std::collections::HashSet;
 
 use bevy::prelude::*;
 use bevy_ascii_terminal::prelude::*;
-use chess::{Board, Piece};
+use chess::{Board, ChessMove, Piece};
 use strum::IntoEnumIterator;
 
 use crate::{
@@ -115,15 +115,17 @@ impl LongTextScroller {
     }
 }
 
+const VERSION: &str = env!("CARGO_PKG_VERSION");
+
 fn render_menu(mut terminal: Query<&mut Terminal>, menu_input: Query<&MenuInput>) {
     let mut terminal = terminal.single_mut();
     terminal.clear();
 
     let menu_input = menu_input.single();
 
-    terminal.put_string([2, STAGE_SIZE.y - 3], "ULTIMATE".fg(Color::RED));
-    terminal.put_string([5, STAGE_SIZE.y - 4], "CHESS".fg(Color::RED));
-    terminal.put_string([6, STAGE_SIZE.y - 5], "2024".fg(Color::GOLD));
+    terminal.put_string([2, STAGE_SIZE.y - 2], "ULTIMATE".fg(Color::RED));
+    terminal.put_string([5, STAGE_SIZE.y - 3], "CHESS".fg(Color::RED));
+    terminal.put_string([6, STAGE_SIZE.y - 4], "2024".fg(Color::GOLD));
 
     for i in 0..STAGE_SIZE.x {
         terminal.put_tile([i, STAGE_SIZE.y - 6], Tile::from('~'));
@@ -138,12 +140,17 @@ fn render_menu(mut terminal: Query<&mut Terminal>, menu_input: Query<&MenuInput>
         };
         tile.fg_color = color;
 
-        terminal.put_tile([0, STAGE_SIZE.y - 8 - i as i32], tile);
+        terminal.put_tile([0, STAGE_SIZE.y - 7 - i as i32], tile);
         terminal.put_string(
-            [1, STAGE_SIZE.y - 8 - i as i32],
+            [1, STAGE_SIZE.y - 7 - i as i32],
             option.to_string().fg(color),
         );
     }
+
+    terminal.put_string(
+        [STAGE_SIZE.x - (VERSION.len() + 1) as i32, 0],
+        format!("v{}", VERSION).fg(Color::GREEN),
+    )
 }
 
 fn chess_color_to_render_color(color: chess::Color) -> Color {
@@ -153,7 +160,33 @@ fn chess_color_to_render_color(color: chess::Color) -> Color {
     }
 }
 
-fn render_board(terminal: &mut Terminal, board: &Board, highlighted_positions: &HashSet<IVec2>) {
+struct ColorSet {
+    normal: Color,
+    highlighted: Color,
+    last_move: Color,
+}
+
+impl ColorSet {
+    const fn new(normal: Color, highlighted: Color, last_move: Color) -> Self {
+        Self {
+            normal,
+            highlighted,
+            last_move,
+        }
+    }
+}
+
+const COLOR_WHITE: ColorSet =
+    ColorSet::new(Color::BEIGE, Color::YELLOW, Color::rgb(1.0, 1.0, 0.56));
+const COLOR_BLACK: ColorSet =
+    ColorSet::new(Color::DARK_GREEN, Color::GREEN, Color::rgb(0.33, 1.0, 0.35));
+
+fn render_board(
+    terminal: &mut Terminal,
+    board: &Board,
+    highlighted_positions: &HashSet<IVec2>,
+    last_move: Option<&ChessMove>,
+) {
     for i in 0..8 {
         terminal.put_tile(
             [0, STAGE_SIZE.y - 1 - (8 - i as i32)],
@@ -165,36 +198,35 @@ fn render_board(terminal: &mut Terminal, board: &Board, highlighted_positions: &
         );
     }
 
-    const COLOR_LIGHT: Color = Color::BEIGE;
-    const COLOR_LIGHT_HIGHLIGHT: Color = Color::YELLOW;
-
-    const COLOR_DARK: Color = Color::DARK_GREEN;
-    const COLOR_DARK_HIGHLIGHT: Color = Color::GREEN;
-
     let get_tile_color = |x: i32, y: i32| {
-        if (x + y) % 2 == 0 {
-            COLOR_DARK
+        let transformed_position = IVec2::new(x, y);
+
+        let set = if (x + y) % 2 == 0 {
+            COLOR_BLACK
         } else {
-            COLOR_LIGHT
+            COLOR_WHITE
+        };
+
+        if highlighted_positions.contains(&transformed_position) {
+            set.highlighted
+        } else if match last_move {
+            Some(last_move) => {
+                let source = square_location(last_move.get_source());
+                let dest = square_location(last_move.get_dest());
+                source == transformed_position || dest == transformed_position
+            }
+            None => false,
+        } {
+            set.last_move
+        } else {
+            set.normal
         }
     };
 
     for i in 0..8 {
         for j in 0..8 {
-            let mut bg_color = get_tile_color(i, j);
-
-            let transformed_position = IVec2::new(i + 1, j + 1);
-
-            if highlighted_positions.contains(&transformed_position) {
-                bg_color = if bg_color == COLOR_DARK {
-                    COLOR_DARK_HIGHLIGHT
-                } else {
-                    COLOR_LIGHT_HIGHLIGHT
-                };
-            }
-
             let mut tile = Tile::default();
-            tile.bg_color = bg_color;
+            tile.bg_color = get_tile_color(i + 1, j + 1);
             terminal.put_tile([i + 1, j + 4], tile);
         }
     }
@@ -227,14 +259,6 @@ fn render_board(terminal: &mut Terminal, board: &Board, highlighted_positions: &
                 };
 
                 tile.bg_color = get_tile_color(position.x, position.y);
-                if highlighted_positions.contains(&IVec2::new(position.x, position.y)) {
-                    tile.bg_color = if tile.bg_color == COLOR_DARK {
-                        COLOR_DARK_HIGHLIGHT
-                    } else {
-                        COLOR_LIGHT_HIGHLIGHT
-                    };
-                }
-
                 terminal.put_tile([position.x, position.y + 3], tile);
             }
         }
@@ -310,6 +334,7 @@ fn render_playing(
         &mut terminal,
         &chess_state.get_board(),
         &highlighted_positions,
+        chess_state.get_last_move(),
     );
 
     terminal.put_string(
@@ -356,7 +381,7 @@ fn render_game_over(
 
     let highlighted = HashSet::new();
 
-    render_board(&mut terminal, chess_state.get_board(), &highlighted);
+    render_board(&mut terminal, chess_state.get_board(), &highlighted, None);
 
     match game_over.end_type {
         EndType::Checkmate(winner) => {
@@ -575,7 +600,10 @@ fn render_credits(
     let mut terminal = terminal.single_mut();
     terminal.clear();
 
-    terminal.put_string([1, STAGE_SIZE.y - 2], "CREDITS".fg(Color::RED));
+    terminal.put_string(
+        [STAGE_SIZE.x - 7, STAGE_SIZE.y - 2],
+        "CREDITS".fg(Color::RED),
+    );
 
     for i in 0..STAGE_SIZE.x {
         terminal.put_tile([i, STAGE_SIZE.y - 4], Tile::from('~'));
@@ -609,12 +637,9 @@ fn render_computer_menu(mut terminal: Query<&mut Terminal>, computer_menu: Res<C
     let mut terminal = terminal.single_mut();
     terminal.clear();
 
+    terminal.put_string([STAGE_SIZE.x - 2, STAGE_SIZE.y - 1], "VS".fg(Color::RED));
     terminal.put_string(
-        [STAGE_SIZE.x / 2 - 2 / 2, STAGE_SIZE.y - 1],
-        "VS".fg(Color::RED),
-    );
-    terminal.put_string(
-        [STAGE_SIZE.x / 2 - 8 / 2, STAGE_SIZE.y - 2],
+        [STAGE_SIZE.x - 8, STAGE_SIZE.y - 2],
         "COMPUTER".fg(Color::RED),
     );
 
@@ -692,10 +717,11 @@ fn render_how_to_play(mut terminal: Query<&mut Terminal>) {
     let mut terminal = terminal.single_mut();
     terminal.clear();
 
-    terminal.put_string([1, STAGE_SIZE.y - 2], "HOW PLAY?".fg(Color::RED));
+    terminal.put_string([STAGE_SIZE.x - 3, STAGE_SIZE.y - 2], "HOW".fg(Color::RED));
+    terminal.put_string([STAGE_SIZE.x - 5, STAGE_SIZE.y - 3], "PLAY?".fg(Color::RED));
 
     for i in 0..STAGE_SIZE.x {
-        terminal.put_tile([i, STAGE_SIZE.y - 4], Tile::from('~'));
+        terminal.put_tile([i, STAGE_SIZE.y - 5], Tile::from('~'));
     }
 
     const HOW_TO_TEXT: [(&'static str, Color); 8] = [

@@ -1,12 +1,17 @@
 [package]
 name = "uc2024"
-version = "0.1.0"
+version = "1.0.0"
 edition = "2021"
 build = "build.rs"
 
 # Enable max optimizations for dependencies, but not for our code:
 [profile.dev.package."*"]
 opt-level = 3
+
+[profile.release]
+opt-level = 'z'
+lto = true
+codegen-units = 1
 
 [features]
 default = []

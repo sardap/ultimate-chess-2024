@@ -541,6 +541,10 @@ impl ChessState {
         self.refresh();
     }
 
+    pub fn get_last_move(&self) -> Option<&ChessMove> {
+        self.actions.last().map(|action| &action.mov)
+    }
+
     pub fn get_last_move_for_player(&self, team: PlayerTeam) -> Option<&ChessMove> {
         let color: chess::Color = team.into();
         self.actions.iter().rev().find_map(|action| {
